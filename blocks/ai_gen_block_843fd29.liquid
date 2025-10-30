@@ -1,0 +1,1226 @@
+{% doc %}
+  @prompt
+    I want image below text with url section  
+    show more button, i want after 12 blocks
+
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-image-text-grid-{{ ai_gen_id }} {
+    padding: {{ block.settings.section_padding }}px 0;
+  }
+
+  .ai-image-text-container-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat({{ block.settings.columns_desktop }}, 1fr);
+    gap: {{ block.settings.grid_gap }}px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-image-text-item-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column-reverse;
+    text-align: {{ block.settings.text_alignment }};
+    transition: transform 0.3s ease;
+  }
+
+  .ai-image-text-item-{{ ai_gen_id }}:hover {
+    transform: translateY(-5px);
+  }
+
+  .ai-image-text-content-{{ ai_gen_id }} {
+    order: 1;
+    margin-bottom: {{ block.settings.content_spacing }}px;
+  }
+
+  .ai-image-text-image-wrapper-{{ ai_gen_id }} {
+    order: 2;
+    width: 100%;
+    aspect-ratio: {{ block.settings.image_aspect_ratio }};
+    overflow: hidden;
+    border-radius: {{ block.settings.image_border_radius }}px;
+  }
+
+  .ai-image-text-image-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .ai-image-text-item-{{ ai_gen_id }}:hover .ai-image-text-image-{{ ai_gen_id }} {
+    transform: scale(1.05);
+  }
+
+  .ai-image-text-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-image-text-placeholder-{{ ai_gen_id }} svg {
+    width: 60%;
+    height: 60%;
+    opacity: 0.3;
+  }
+
+  .ai-image-text-title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    font-weight: {{ block.settings.title_weight }};
+    color: {{ block.settings.title_color }};
+    margin: 0 0 {{ block.settings.title_margin }}px 0;
+    line-height: 1.3;
+  }
+
+  .ai-image-text-description-{{ ai_gen_id }} {
+    font-size: {{ block.settings.description_size }}px;
+    color: {{ block.settings.description_color }};
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .ai-image-text-link-{{ ai_gen_id }} {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .ai-image-text-show-more-{{ ai_gen_id }} {
+    text-align: center;
+    margin-top: {{ block.settings.button_margin }}px;
+  }
+
+  .ai-image-text-show-more-button-{{ ai_gen_id }} {
+    background-color: {{ block.settings.button_bg_color }};
+    color: {{ block.settings.button_text_color }};
+    border: {{ block.settings.button_border_width }}px solid {{ block.settings.button_border_color }};
+    padding: {{ block.settings.button_padding }}px {{ block.settings.button_padding | times: 1.5 }}px;
+    border-radius: {{ block.settings.button_border_radius }}px;
+    font-size: {{ block.settings.button_font_size }}px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .ai-image-text-show-more-button-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_bg_color }};
+    color: {{ block.settings.button_hover_text_color }};
+    border-color: {{ block.settings.button_hover_border_color }};
+  }
+
+  .ai-image-text-item-{{ ai_gen_id }}.hidden {
+    display: none;
+  }
+
+  @media screen and (max-width: 768px) {
+    .ai-image-text-container-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_mobile }}, 1fr);gap: {{ block.settings.grid_gap | times: 0.75 }}px;
+      padding: 0 15px;
+    }
+
+    .ai-image-text-title-{{ ai_gen_id }} {
+      font-size: {{ block.settings.title_size | times: 0.9 }}px;
+    }
+
+    .ai-image-text-description-{{ ai_gen_id }} {
+      font-size: {{ block.settings.description_size | times: 0.9 }}px;
+    }
+  }
+{% endstyle %}
+
+<image-text-grid-{{ ai_gen_id }}
+  class="ai-image-text-grid-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+  data-initial-count="12"
+>
+  <div class="ai-image-text-container-{{ ai_gen_id }}">
+    {% for i in (1..24) %}
+      {% liquid
+        assign item_enabled_key = 'item_' | append: i | append: '_enabled'
+        assign item_title_key = 'item_' | append: i | append: '_title'
+        assign item_description_key = 'item_' | append: i | append: '_description'
+        assign item_image_key = 'item_' | append: i | append: '_image'
+        assign item_url_key = 'item_' | append: i | append: '_url'
+
+        assign item_enabled = block.settings[item_enabled_key]
+        assign item_title = block.settings[item_title_key]
+        assign item_description = block.settings[item_description_key]
+        assign item_image = block.settings[item_image_key]
+        assign item_url = block.settings[item_url_key]
+      %}
+
+      {% if item_enabled %}
+        {% assign item_class = 'ai-image-text-item-' | append: ai_gen_id %}
+        {% if i > 12 %}
+          {% assign item_class = item_class | append: ' hidden' %}
+        {% endif %}
+
+        <div class="{{ item_class }}" data-item-index="{{ i }}">
+
+
+
+        <div class="ai-image-text-image-wrapper-{{ ai_gen_id }}">
+            {% if item_image %}
+              <img
+                src="{{ item_image | image_url: width: 600 }}"
+                alt="{{ item_image.alt | escape }}"
+                class="ai-image-text-image-{{ ai_gen_id }}"
+                loading="lazy"
+                width="{{ item_image.width }}"
+                height="{{ item_image.height }}"
+              >
+            {% else %}
+              <div class="ai-image-text-placeholder-{{ ai_gen_id }}">
+                {{ 'image' | placeholder_svg_tag }}
+              </div>
+            {% endif %}
+          </div>
+
+
+          {% if item_url != blank %}
+            <a href="{{ item_url }}" class="ai-image-text-link-{{ ai_gen_id }}">
+          {% endif %}<div class="ai-image-text-content-{{ ai_gen_id }}">
+            {% if item_title != blank %}
+              <h3 class="ai-image-text-title-{{ ai_gen_id }}">{{ item_title }}</h3>
+            {% endif %}
+            {% if item_description != blank %}
+              <p class="ai-image-text-description-{{ ai_gen_id }}">{{ item_description }}</p>
+            {% endif %}
+          </div>
+
+          {% if item_url != blank %}
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="ai-image-text-show-more-{{ ai_gen_id }}" style="display: none;">
+    <button class="ai-image-text-show-more-button-{{ ai_gen_id }}" type="button">
+      {{ block.settings.show_more_text }}
+    </button>
+  </div>
+</image-text-grid-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class ImageTextGrid{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.initialCount = parseInt(this.dataset.initialCount) || 12;
+        this.currentCount = this.initialCount;
+      }
+
+      connectedCallback() {
+        this.items = this.querySelectorAll('.ai-image-text-item-{{ ai_gen_id }}');
+        this.showMoreContainer = this.querySelector('.ai-image-text-show-more-{{ ai_gen_id }}');
+        this.showMoreButton = this.querySelector('.ai-image-text-show-more-button-{{ ai_gen_id }}');
+        this.setupShowMore();
+      }
+
+      setupShowMore() {
+        const totalEnabledItems = this.items.length;
+        if (totalEnabledItems > this.initialCount) {
+          this.showMoreContainer.style.display = 'block';
+          this.showMoreButton.addEventListener('click', () => {
+            this.showMoreItems();
+          });
+        }
+      }
+
+      showMoreItems() {
+        const hiddenItems = Array.from(this.items).filter(item => 
+          item.classList.contains('hidden')
+        );
+        
+        const itemsToShow = hiddenItems.slice(0, this.initialCount);
+        
+        itemsToShow.forEach(item => {
+          item.classList.remove('hidden');
+        });
+        
+        this.currentCount += itemsToShow.length;
+        
+        if (hiddenItems.length <= this.initialCount) {
+          this.showMoreContainer.style.display = 'none';
+        }
+      }
+    }
+
+    customElements.define('image-text-grid-{{ ai_gen_id }}', ImageTextGrid{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Image Text Grid",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "columns_desktop",
+      "label": "Columns on desktop",
+      "options": [
+        {"value": "1", "label": "1"},
+        {"value": "2", "label": "2"},
+        {"value": "3", "label": "3"},
+        {"value": "4", "label": "4"}
+      ],
+      "default": "3"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {"value": "1", "label": "1"},
+        {"value": "2", "label": "2"}
+      ],
+      "default": "1"
+    },
+    {
+      "type": "range",
+      "id": "grid_gap",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "label": "Grid gap",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "section_padding",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Section padding",
+      "default": 40
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        {"value": "left", "label": "Left"},
+        {"value": "center", "label": "Center"},
+        {"value": "right", "label": "Right"}
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Image Style"
+    },
+    {
+      "type": "select",
+      "id": "image_aspect_ratio",
+      "label": "Image aspect ratio",
+      "options": [
+        {"value": "1/1", "label": "Square (1:1)"},
+        {"value": "4/3", "label": "Landscape (4:3)"},
+        {"value": "3/4", "label": "Portrait (3:4)"},
+        {"value": "16/9", "label": "Wide (16:9)"}
+      ],
+      "default": "4/3"
+    },
+    {
+      "type": "range",
+      "id": "image_border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Image border radius",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "content_spacing",
+      "min": 10,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Content spacing",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 14,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Title size",
+      "default": 18
+    },
+    {
+      "type": "select",
+      "id": "title_weight",
+      "label": "Title weight",
+      "options": [
+        {"value": "400", "label": "Normal"},
+        {"value": "500", "label": "Medium"},
+        {"value": "600", "label": "Semi-bold"},
+        {"value": "700", "label": "Bold"}
+      ],
+      "default": "600"
+    },
+    {
+      "type": "range",
+      "id": "title_margin",
+      "min": 5,
+      "max": 25,
+      "step": 1,
+      "unit": "px",
+      "label": "Title margin bottom",
+      "default": 10
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "description_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Description size",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "description_color",
+      "label": "Description color",
+      "default": "#666666"
+    },
+    {
+      "type": "header",
+      "content": "Show More Button"
+    },
+    {
+      "type": "text",
+      "id": "show_more_text",
+      "label": "Show more text",
+      "default": "Show More"
+    },
+    {
+      "type": "range",
+      "id": "button_margin",
+      "min": 20,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "label": "Button margin top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "button_padding",
+      "min": 8,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Button padding",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "min": 12,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "label": "Button font size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "label": "Button border radius",
+      "default": 6
+    },
+    {
+      "type": "range",
+      "id": "button_border_width",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "label": "Button border width",
+      "default": 1
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Button border color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg_color",
+      "label": "Button hover background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Button hover text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_border_color",
+      "label": "Button hover border color",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Item 1"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_1_enabled",
+      "label": "Enable item 1",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_1_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_1_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_1_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_1_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 2"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_2_enabled",
+      "label": "Enable item 2",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_2_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_2_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_2_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_2_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 3"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_3_enabled",
+      "label": "Enable item 3",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_3_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_3_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_3_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_3_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 4"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_4_enabled",
+      "label": "Enable item 4",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_4_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_4_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_4_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_4_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 5"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_5_enabled",
+      "label": "Enable item 5",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_5_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_5_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_5_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_5_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 6"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_6_enabled",
+      "label": "Enable item 6",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_6_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_6_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_6_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_6_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 7"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_7_enabled",
+      "label": "Enable item 7",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_7_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_7_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_7_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_7_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 8"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_8_enabled",
+      "label": "Enable item 8",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_8_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_8_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_8_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_8_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 9"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_9_enabled",
+      "label": "Enable item 9",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_9_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_9_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_9_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_9_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 10"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_10_enabled",
+      "label": "Enable item 10",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_10_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_10_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_10_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_10_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 11"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_11_enabled",
+      "label": "Enable item 11",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_11_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_11_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_11_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_11_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 12"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_12_enabled",
+      "label": "Enable item 12",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "item_12_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_12_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_12_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_12_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 13"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_13_enabled",
+      "label": "Enable item 13"
+    },
+    {
+      "type": "text",
+      "id": "item_13_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_13_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_13_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_13_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 14"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_14_enabled",
+      "label": "Enable item 14"
+    },
+    {
+      "type": "text",
+      "id": "item_14_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_14_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_14_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_14_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 15"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_15_enabled",
+      "label": "Enable item 15"
+    },
+    {
+      "type": "text",
+      "id": "item_15_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_15_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_15_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_15_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 16"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_16_enabled",
+      "label": "Enable item 16"
+    },
+    {
+      "type": "text",
+      "id": "item_16_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_16_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_16_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_16_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 17"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_17_enabled",
+      "label": "Enable item 17"
+    },
+    {
+      "type": "text",
+      "id": "item_17_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_17_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_17_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_17_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 18"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_18_enabled",
+      "label": "Enable item 18"
+    },
+    {
+      "type": "text",
+      "id": "item_18_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_18_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_18_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_18_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 19"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_19_enabled",
+      "label": "Enable item 19"
+    },
+    {
+      "type": "text",
+      "id": "item_19_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_19_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_19_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_19_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 20"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_20_enabled",
+      "label": "Enable item 20"
+    },
+    {
+      "type": "text",
+      "id": "item_20_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_20_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_20_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_20_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 21"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_21_enabled",
+      "label": "Enable item 21"
+    },
+    {
+      "type": "text",
+      "id": "item_21_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_21_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_21_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_21_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 22"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_22_enabled",
+      "label": "Enable item 22"
+    },
+    {
+      "type": "text",
+      "id": "item_22_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_22_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_22_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_22_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 23"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_23_enabled",
+      "label": "Enable item 23"
+    },
+    {
+      "type": "text",
+      "id": "item_23_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_23_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_23_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_23_url",
+      "label": "Link URL"
+    },
+    {
+      "type": "header",
+      "content": "Item 24"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_24_enabled",
+      "label": "Enable item 24"
+    },
+    {
+      "type": "text",
+      "id": "item_24_title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "item_24_description",
+      "label": "Description"
+    },
+    {
+      "type": "image_picker",
+      "id": "item_24_image",
+      "label": "Image"
+    },
+    {
+      "type": "url",
+      "id": "item_24_url",
+      "label": "Link URL"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image Text Grid"
+    }
+  ]
+}
+{% endschema %}

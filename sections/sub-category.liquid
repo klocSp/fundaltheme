@@ -1,0 +1,254 @@
+{% if collection.metafields.custom.category_details_collection_page %}
+
+  <div class="subcategory-wrapper section section--page-width">
+    <div class="subcategory-grid" id="subcategoryGrid">
+
+      
+      {% assign items = collection.metafields.custom.category_details_collection_page.value %}
+      {% for item in items %}
+
+{% assign category_name = item.category_links | remove: request.origin %}
+
+{% if forloop.index <= 9 %}
+        <a href="{{ item.category_links }}" class="subcategory-item{% if request.path == category_name %} selected{% endif %}">
+          {% if item.icon %}
+            <div class="subcategory-icon"
+                 data-svg-url="{{ item.icon | file_url }}"
+                 data-category-name="{{ item.category_name | escape }}">
+              <!-- SVG will be injected here -->
+            </div>
+          {% endif %}
+          <div class="subcategory-name">{{ item.category_name }}</div>
+        </a>
+      {% endif %}
+     
+      
+
+{% if forloop.index == 10 %}
+          <div class="subcategory-item show-more" onclick="toggleDropdown()">
+            <span>Show More</span>
+            
+          </div>
+        {% endif %}
+
+
+
+      {% endfor %}
+
+
+
+
+
+
+      
+    </div>
+    <div class="inner_main_drop">
+    {% for item in items %}
+    <div class="dropdown hidden" id="moreDropdown">
+              {% for more_item in items %}
+                {% if forloop.index > 9 %}
+                  <a href="{{ more_item.category_links }}" class="dropdown-item">{{ more_item.category_name }}</a>
+                {% endif %}
+              {% endfor %}
+            </div>
+             {% endfor %}
+             </div>
+  </div>
+{% endif %}
+
+<style>
+.subcategory-wrapper {
+  margin-bottom: 2rem;
+}
+.subcategory-grid {
+   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
+  gap: 15px;
+  max-width: 100%; 
+}
+.subcategory-grid.expanded {
+  max-height: 1000px;
+}
+.subcategory-item.selected g {
+    stroke: white;
+}
+.subcategory-item {
+   min-width: 5rem;
+    text-align: center;
+  width: auto;
+  height: auto;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #eee;
+  padding: 10px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.subcategory-item:hover {
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.subcategory-item.selected {
+  background-color: #000;
+  color: #fff;
+}
+
+.subcategory-item.selected .subcategory-name {
+  color: #fff;
+}
+
+.subcategory-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  margin-bottom: 8px;
+}
+
+.subcategory-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: #000;
+}
+
+.subcategory-item.selected .subcategory-icon svg {
+  fill: #fff;
+}
+
+.subcategory-name {
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  max-height: 2.4em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.show-toggle {
+  display: block;
+  margin: 1rem auto 0;
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 14px;
+  cursor: pointer;
+}
+.show-more {
+  position: relative;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  margin-top: 5px;
+  right: 3.5%;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 220px;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  border-bottom: 1px solid #e8e0e0;
+}
+
+.dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+
+@media (max-width: 1000px) {
+  .subcategory-grid {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    gap: 10px;
+    padding: 0 10px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
+    width: 100%;  /* Make sure the grid takes full width */
+  }
+
+  .subcategory-item {
+    flex: 0 0 calc(33.33% - 10px);  /* 3 items per row */
+    scroll-snap-align: start;
+    box-sizing: border-box;
+  }
+
+  .subcategory-grid::-webkit-scrollbar {
+    display: none; /* hide scrollbar on mobile */
+  }
+
+.dropdown {
+  right: 9%;
+}
+
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const icons = document.querySelectorAll('.subcategory-icon[data-svg-url]');
+
+  icons.forEach(async (iconEl) => {
+    const url = iconEl.getAttribute('data-svg-url');
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('SVG fetch failed');
+      const svgText = await res.text();
+      iconEl.innerHTML = svgText;
+    } catch (err) {
+      console.error('SVG load error:', err);
+    }
+  });
+});
+
+function toggleDropdown() {
+  const dropdown = document.getElementById('moreDropdown');
+  dropdown.classList.toggle('hidden');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  var showMore = document.querySelector('.show-more');
+  var dropdown = document.getElementById('moreDropdown');
+
+  // If the click is outside the 'Show More' button and the dropdown, hide the dropdown
+  if (!showMore.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
+
+  </script>
+
+
+
+
+{% schema %}
+{
+  "name": "Sub Category",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Sub Category"
+    }
+  ]
+}
+{% endschema %}

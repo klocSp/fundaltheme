@@ -1,0 +1,31 @@
+
+{% if collection.metafields.custom.collection_banner !=blank %}
+{% if section.settings.image %}
+<div class="baneer_imge_colletion"> 
+    <img src="{{ section.settings.image |img_url:"" }}" />
+    </div>
+{% endif %}
+{% else %}
+    <div class="cutome_header">
+<h1 class="tit_cutom">{{ collection.title }}</h1>
+</div>
+{% endif %}
+
+
+{% schema %}
+{
+  "name": "Heading Settings",
+  "settings": [
+    {
+    "type": "image_picker",
+    "id": "image",
+    "label": "Image"
+    }
+  ],
+  "presets": [
+    {
+    "name": "Heading Settings"
+    }
+  ]
+}
+{% endschema %}

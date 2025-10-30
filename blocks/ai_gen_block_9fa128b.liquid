@@ -1,0 +1,622 @@
+{% doc %}
+  @prompt
+    enaku store open ana odaney popup varanum popup la login with otp form venum... ipo mobile num vechu otp send panathuku aprm popup varakudathu
+
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-login-popup-overlay-{{ ai_gen_id }} {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .ai-login-popup-overlay-{{ ai_gen_id }}.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .ai-login-popup-{{ ai_gen_id }} {
+    background-color: {{ block.settings.popup_background_color }};
+    border-radius: {{ block.settings.border_radius }}px;
+    padding: 40px;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+  }
+
+  .ai-login-popup-overlay-{{ ai_gen_id }}.active .ai-login-popup-{{ ai_gen_id }} {
+    transform: translateY(0);
+  }
+
+  .ai-login-popup-close-{{ ai_gen_id }} {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: {{ block.settings.text_color }};
+    padding: 5px;
+    line-height: 1;
+  }
+
+  .ai-login-popup-title-{{ ai_gen_id }} {
+    color: {{ block.settings.text_color }};
+    font-size: {{ block.settings.title_size }}px;
+    margin: 0 0 20px 0;
+    text-align: center;
+  }
+
+  .ai-login-popup-subtitle-{{ ai_gen_id }} {
+    color: {{ block.settings.text_color }};
+    font-size: {{ block.settings.subtitle_size }}px;
+    margin: 0 0 30px 0;
+    text-align: center;
+    opacity: 0.8;
+  }
+
+  .ai-login-form-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .ai-login-form-step-{{ ai_gen_id }} {
+    display: none;
+  }
+
+  .ai-login-form-step-{{ ai_gen_id }}.active {
+    display: block;
+  }
+
+  .ai-login-input-group-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ai-login-label-{{ ai_gen_id }} {
+    color: {{ block.settings.text_color }};
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .ai-login-input-{{ ai_gen_id }} {
+    padding: 12px 16px;
+    border: 1px solid {{ block.settings.input_border_color }};
+    border-radius: {{ block.settings.input_border_radius }}px;
+    font-size: 16px;
+    background-color: {{ block.settings.input_background_color }};
+    color: {{ block.settings.text_color }};
+  }
+
+  .ai-login-input-{{ ai_gen_id }}:focus {
+    outline: none;
+    border-color: {{ block.settings.primary_color }};
+  }
+
+  .ai-login-button-{{ ai_gen_id }} {
+    padding: 14px 24px;
+    background-color: {{ block.settings.button_color }};
+    color: {{ block.settings.button_text_color }};
+    border: none;
+    border-radius: {{ block.settings.button_border_radius }}px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .ai-login-button-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_color }};
+  }
+
+  .ai-login-button-{{ ai_gen_id }}:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .ai-login-otp-inputs-{{ ai_gen_id }} {
+    display: flex;
+    gap: 10px;
+    justify-content: center;}
+
+  .ai-login-otp-input-{{ ai_gen_id }} {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    border: 2px solid {{ block.settings.input_border_color }};
+    border-radius: {{ block.settings.input_border_radius }}px;
+    background-color: {{ block.settings.input_background_color }};
+    color: {{ block.settings.text_color }};
+  }
+
+  .ai-login-otp-input-{{ ai_gen_id }}:focus {
+    outline: none;
+    border-color: {{ block.settings.primary_color }};
+  }
+
+  .ai-login-resend-{{ ai_gen_id }} {
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  .ai-login-resend-link-{{ ai_gen_id }} {
+    color: {{ block.settings.primary_color }};
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .ai-login-resend-link-{{ ai_gen_id }}:hover {
+    text-decoration: underline;
+  }
+
+  .ai-login-error-{{ ai_gen_id }} {
+    color: {{ block.settings.error_color }};
+    font-size: 14px;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .ai-login-success-{{ ai_gen_id }} {
+    color: {{ block.settings.success_color }};
+    font-size: 14px;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  @media screen and (max-width: 480px) {
+    .ai-login-popup-{{ ai_gen_id }} {
+      padding: 30px 20px;
+    }
+
+    .ai-login-otp-input-{{ ai_gen_id }} {
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+    }
+  }
+{% endstyle %}
+
+<login-popup-{{ ai_gen_id }} class="ai-login-popup-overlay-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-login-popup-{{ ai_gen_id }}">
+    <button class="ai-login-popup-close-{{ ai_gen_id }}" aria-label="Close popup">×</button>
+    <h2 class="ai-login-popup-title-{{ ai_gen_id }}">{{ block.settings.popup_title }}</h2>
+    <p class="ai-login-popup-subtitle-{{ ai_gen_id }}">{{ block.settings.popup_subtitle }}</p>
+
+    <div class="ai-login-form-{{ ai_gen_id }}">
+      <div class="ai-login-form-step-{{ ai_gen_id }} ai-login-step-mobile-{{ ai_gen_id }} active">
+        <div class="ai-login-input-group-{{ ai_gen_id }}">
+          <label class="ai-login-label-{{ ai_gen_id }}" for="mobile-{{ ai_gen_id }}">{{ block.settings.mobile_label }}</label>
+          <input 
+            type="tel" 
+            id="mobile-{{ ai_gen_id }}"
+            class="ai-login-input-{{ ai_gen_id }}"
+            placeholder="{{ block.settings.mobile_placeholder }}"
+            maxlength="10"
+            required
+          >
+        </div>
+        <button type="button" class="ai-login-button-{{ ai_gen_id }} ai-login-send-otp-{{ ai_gen_id }}">
+          {{ block.settings.send_otp_text }}
+        </button>
+        <div class="ai-login-error-{{ ai_gen_id }}" style="display: none;"></div>
+      </div>
+
+      <div class="ai-login-form-step-{{ ai_gen_id }} ai-login-step-otp-{{ ai_gen_id }}">
+        <div class="ai-login-input-group-{{ ai_gen_id }}">
+          <label class="ai-login-label-{{ ai_gen_id }}">{{ block.settings.otp_label }}</label>
+          <div class="ai-login-otp-inputs-{{ ai_gen_id }}">
+            <input type="text" class="ai-login-otp-input-{{ ai_gen_id }}" maxlength="1" data-index="0">
+            <input type="text" class="ai-login-otp-input-{{ ai_gen_id }}" maxlength="1" data-index="1">
+            <input type="text" class="ai-login-otp-input-{{ ai_gen_id }}" maxlength="1" data-index="2">
+            <input type="text" class="ai-login-otp-input-{{ ai_gen_id }}" maxlength="1" data-index="3">
+            <input type="text" class="ai-login-otp-input-{{ ai_gen_id }}" maxlength="1" data-index="4">
+            <input type="text" class="ai-login-otp-input-{{ ai_gen_id }}" maxlength="1" data-index="5">
+          </div>
+        </div>
+        <button type="button" class="ai-login-button-{{ ai_gen_id }} ai-login-verify-otp-{{ ai_gen_id }}">
+          {{ block.settings.verify_otp_text }}
+        </button>
+        <div class="ai-login-resend-{{ ai_gen_id }}">
+          <a href="#" class="ai-login-resend-link-{{ ai_gen_id }}">{{ block.settings.resend_otp_text }}</a>
+        </div>
+        <div class="ai-login-error-{{ ai_gen_id }}" style="display: none;"></div>
+        <div class="ai-login-success-{{ ai_gen_id }}" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+</login-popup-{{ ai_gen_id }}>
+
+<script>
+(function() {
+  class LoginPopup{{ ai_gen_id }} extends HTMLElement {
+    constructor() {
+      super();
+      this.currentStep = 'mobile';
+      this.mobileNumber = '';
+      this.isOtpSent = false;
+    }
+
+    connectedCallback() {
+      this.setupEventListeners();
+      this.checkAndShowPopup();
+    }
+
+    checkAndShowPopup() {
+      const hasSeenPopup = localStorage.getItem('ai-login-popup-seen-{{ ai_gen_id }}');
+      const isOtpSent = localStorage.getItem('ai-otp-sent-{{ ai_gen_id }}');
+      
+      if (!hasSeenPopup && !isOtpSent) {
+        setTimeout(() => {
+          this.showPopup();
+        }, {{ block.settings.delay_seconds | times: 1000 }});
+      }
+    }
+
+    setupEventListeners() {
+      const closeBtn = this.querySelector('.ai-login-popup-close-{{ ai_gen_id }}');
+      const sendOtpBtn = this.querySelector('.ai-login-send-otp-{{ ai_gen_id }}');
+      const verifyOtpBtn = this.querySelector('.ai-login-verify-otp-{{ ai_gen_id }}');
+      const resendLink = this.querySelector('.ai-login-resend-link-{{ ai_gen_id }}');
+      const mobileInput = this.querySelector('#mobile-{{ ai_gen_id }}');
+      const otpInputs = this.querySelectorAll('.ai-login-otp-input-{{ ai_gen_id }}');
+
+      closeBtn.addEventListener('click', () => this.hidePopup());
+      sendOtpBtn.addEventListener('click', () => this.sendOtp());
+      verifyOtpBtn.addEventListener('click', () => this.verifyOtp());
+      resendLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.resendOtp();
+      });
+
+      mobileInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '');
+      });
+
+      otpInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          const value = e.target.value.replace(/\D/g, '');
+          e.target.value = value;
+          
+          if (value && index < otpInputs.length - 1) {
+            otpInputs[index + 1].focus();
+          }
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            otpInputs[index - 1].focus();
+          }
+        });
+      });
+
+      this.addEventListener('click', (e) => {
+        if (e.target === this) {
+          this.hidePopup();
+        }
+      });
+    }
+
+    showPopup() {
+      this.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    hidePopup() {
+      this.classList.remove('active');
+      document.body.style.overflow = '';localStorage.setItem('ai-login-popup-seen-{{ ai_gen_id }}', 'true');
+    }
+
+    sendOtp() {
+      const mobileInput = this.querySelector('#mobile-{{ ai_gen_id }}');
+      const mobile = mobileInput.value.trim();
+      const errorDiv = this.querySelector('.ai-login-step-mobile-{{ ai_gen_id }} .ai-login-error-{{ ai_gen_id }}');
+      
+      if (!mobile || mobile.length !== 10) {
+        this.showError(errorDiv, 'Please enter a valid 10-digit mobile number');
+        return;
+      }
+
+      this.mobileNumber = mobile;
+      const sendBtn = this.querySelector('.ai-login-send-otp-{{ ai_gen_id }}');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending...';
+
+      setTimeout(() => {
+        this.showStep('otp');
+        this.isOtpSent = true;
+        localStorage.setItem('ai-otp-sent-{{ ai_gen_id }}', 'true');
+        sendBtn.disabled = false;
+        sendBtn.textContent = '{{ block.settings.send_otp_text }}';
+      }, 2000);
+    }
+
+    verifyOtp() {
+      const otpInputs = this.querySelectorAll('.ai-login-otp-input-{{ ai_gen_id }}');
+      const otp = Array.from(otpInputs).map(input => input.value).join('');
+      const errorDiv = this.querySelector('.ai-login-step-otp-{{ ai_gen_id }} .ai-login-error-{{ ai_gen_id }}');
+      const successDiv = this.querySelector('.ai-login-step-otp-{{ ai_gen_id }} .ai-login-success-{{ ai_gen_id }}');
+      
+      if (otp.length !== 6) {
+        this.showError(errorDiv, 'Please enter complete 6-digit OTP');
+        return;
+      }
+
+      const verifyBtn = this.querySelector('.ai-login-verify-otp-{{ ai_gen_id }}');
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = 'Verifying...';
+
+      setTimeout(() => {
+        if (otp === '123456') {
+          this.showSuccess(successDiv, 'Login successful! Redirecting...');
+          setTimeout(() => {
+            this.hidePopup();
+            localStorage.removeItem('ai-otp-sent-{{ ai_gen_id }}');
+          }, 2000);
+        } else {
+          this.showError(errorDiv, 'Invalid OTP. Please try again.');
+        }verifyBtn.disabled = false;
+        verifyBtn.textContent = '{{ block.settings.verify_otp_text }}';
+      }, 2000);
+    }
+
+    resendOtp() {
+      const resendLink = this.querySelector('.ai-login-resend-link-{{ ai_gen_id }}');
+      resendLink.textContent = 'Sending...';
+      
+      setTimeout(() => {
+        resendLink.textContent = '{{ block.settings.resend_otp_text }}';
+        const successDiv = this.querySelector('.ai-login-step-otp-{{ ai_gen_id }} .ai-login-success-{{ ai_gen_id }}');
+        this.showSuccess(successDiv, 'OTP resent successfully!');
+        setTimeout(() => {
+          successDiv.style.display = 'none';
+        }, 3000);
+      }, 2000);
+    }
+
+    showStep(step) {
+      const steps = this.querySelectorAll('.ai-login-form-step-{{ ai_gen_id }}');
+      steps.forEach(s => s.classList.remove('active'));
+      const targetStep = this.querySelector(`.ai-login-step-${step}-{{ ai_gen_id }}`);
+      if (targetStep) {
+        targetStep.classList.add('active');
+        this.currentStep = step;
+      }
+    }
+
+    showError(element, message) {
+      element.textContent = message;
+      element.style.display = 'block';
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, 5000);
+    }
+
+    showSuccess(element, message) {
+      element.textContent = message;
+      element.style.display = 'block';
+    }
+  }
+
+  customElements.define('login-popup-{{ ai_gen_id }}', LoginPopup{{ ai_gen_id }});
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Login OTP Popup",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Popup Content"
+    },
+    {
+      "type": "text",
+      "id": "popup_title",
+      "label": "Popup title",
+      "default": "Welcome Back!"
+    },
+    {
+      "type": "text",
+      "id": "popup_subtitle",
+      "label": "Popup subtitle",
+      "default": "Login to your account with OTP"
+    },
+    {
+      "type": "text",
+      "id": "mobile_label",
+      "label": "Mobile number label",
+      "default": "Mobile Number"
+    },
+    {
+      "type": "text",
+      "id": "mobile_placeholder",
+      "label": "Mobile placeholder",
+      "default": "Enter your mobile number"
+    },
+    {
+      "type": "text",
+      "id": "send_otp_text",
+      "label": "Send OTP button text",
+      "default": "Send OTP"
+    },
+    {
+      "type": "text",
+      "id": "otp_label",
+      "label": "OTP label",
+      "default": "Enter 6-digit OTP"
+    },
+    {
+      "type": "text",
+      "id": "verify_otp_text",
+      "label": "Verify OTP button text",
+      "default": "Verify & Login"
+    },
+    {
+      "type": "text",
+      "id": "resend_otp_text",
+      "label": "Resend OTP text",
+      "default": "Resend OTP"
+    },
+    {
+      "type": "header",
+      "content": "Popup Settings"
+    },
+    {
+      "type": "range",
+      "id": "delay_seconds",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "label": "Show popup after",
+      "default": 2
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "popup_background_color",
+      "label": "Popup background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary color",
+      "default": "#000f9f"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button color",
+      "default": "#000f9f"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_color",
+      "label": "Button hover color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "input_background_color",
+      "label": "Input background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "input_border_color",
+      "label": "Input border color",
+      "default": "#e6e6e6"
+    },
+    {
+      "type": "color",
+      "id": "success_color",
+      "label": "Success color",
+      "default": "#008060"
+    },
+    {
+      "type": "color",
+      "id": "error_color",
+      "label": "Error color",
+      "default": "#D82C0D"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 16,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "label": "Title size",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Subtitle size",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Popup border radius",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "input_border_radius",
+      "min": 0,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "label": "Input border radius",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "min": 0,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "label": "Button border radius",
+      "default": 8
+    }
+  ],
+  "presets": [
+    {
+      "name": "Login OTP Popup"
+    }
+  ]
+}
+{% endschema %}

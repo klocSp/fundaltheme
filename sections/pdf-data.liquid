@@ -1,0 +1,201 @@
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<div class="container page-width">
+    <h1>Bulk Gift Card PDF Generator</h1>
+    <div class="input-container">
+        <input type="file" id="csvFile" accept=".csv" />
+    </div>
+    <button onclick="processCSV()">Generate Gift Cards</button>
+</div>
+
+{% schema %}
+  {
+    "name": "Gift card pdf generator",
+    "settings": [
+     
+    ],
+    "presets": [
+    {
+      "name": "Gift card pdf generator",
+      "category": "text",
+    }
+    ]
+  }
+{% endschema %}
+
+<script>
+function processCSV() {
+  const fileInput = document.getElementById("csvFile");
+  if (!fileInput || !fileInput.files.length) {
+    alert("Please upload a CSV file first.");
+    return;
+  }
+
+  Papa.parse(fileInput.files[0], {
+    header: true,
+    skipEmptyLines: true,
+    complete: function (results) {
+      generateBulkPDF(results.data);
+    },
+  });
+}
+
+async function generateBulkPDF(rows) {
+  const { jsPDF } = window.jspdf;
+  const zip = new JSZip();
+
+  for (const [index, row] of rows.entries()) {
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: [160, 100],
+    });
+
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const marginX = 10;
+    const marginTop = 12;
+    const marginBottom = 14;
+
+    // 1️⃣ Background (soft gradient, no border)
+    for (let i = 0; i < pageH; i++) {
+      const shade = 250 - i * 0.5;
+      doc.setFillColor(shade, shade, 255);
+      doc.rect(0, i, pageW, 1, "F");
+    }
+
+    // 2️⃣ Logo (left side)
+    const logoUrl =
+      row.BrandLogo ||
+      "https://cdn.shopify.com/s/files/1/0617/5830/8395/files/newww.png?v=1761715683";
+    try {
+      const logoWidth = 40;
+      const logoHeight = 13;
+      const logoXPos = marginX;
+      const logoYPos = marginTop;
+      doc.addImage(logoUrl, "PNG", logoXPos, logoYPos, logoWidth, logoHeight);
+    } catch (err) {
+      console.error("Error loading logo image:", err);
+    }
+
+    // 3️⃣ Brand name (right side)
+    doc.setFont("sans-serif", "bold");
+    doc.setFontSize(14);
+    const brandName = row.Brand || "FundlExperiences";
+    const brandX = pageW - marginX;
+    doc.setTextColor(0, 51, 102);
+    doc.text(brandName, brandX, marginTop + 8, { align: "right" });
+
+    // 4️⃣ Partner logo (optional, right side small)
+    const rightLogo =
+      row.PartnerLogo ||
+      "https://upload.wikimedia.org/wikipedia/commons/1/1a/Makemytrip_logo.svg";
+    try {
+      doc.addImage(rightLogo, "PNG", pageW - 32, marginTop - 4, 22, 10);
+    } catch (err) {
+      console.warn("Right logo failed:", err);
+    }
+
+    // 5️⃣ Confirmation and Thank You message (stacked, both centered, NO shadow)
+    const topContent = marginTop + 23;
+    doc.setFontSize(13);
+    doc.setTextColor(0, 51, 102);
+    doc.text(
+      `Your ${row.Brand || "Makemytrip"} Gift Card purchase is confirmed.`,
+      pageW / 2,
+      topContent,
+      { align: "center" }
+    );
+    doc.setFontSize(12);
+    doc.text(
+      "Thank you for shopping with us!",
+      pageW / 2,
+      topContent + 8,
+      { align: "center" }
+    );
+
+    // 6️⃣ Voucher value label and amount (horizontal, NO shadow)
+    doc.setFontSize(11);
+    doc.setTextColor(0, 102, 204);
+    const voucherText = "Your Voucher Value:";
+    const amountText = ` ${row.Price || "4000"}`;
+    const voucherWidth = doc.getTextWidth(voucherText);
+    const amountWidth = doc.getTextWidth(amountText);
+    const totalWidth = voucherWidth + amountWidth + 3;
+    const centerX = pageW / 2 - totalWidth / 2;
+    const voucherY = topContent + 22;
+
+    // Label (blue)
+    doc.text(voucherText, centerX, voucherY);
+
+    // Amount (red, bold, NO shadow)
+    doc.setFontSize(18);
+    doc.setTextColor(255, 0, 0);
+    doc.setFont("sans-serif", "bold");
+    doc.text(amountText, centerX + voucherWidth + 3, voucherY + 1.5);
+
+    // 8️⃣ Footer info (margin from ribbon)
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont("sans-serif", "bold");
+    const footerY = pageH - marginBottom - 7;
+    doc.text(`Voucher Code: ${row.Code || "N/A"}`, marginX, footerY);
+    doc.text(`Expiry Date: ${row.ExpiryDate || "N/A"}`, pageW - marginX, footerY, {
+      align: "right",
+    });
+
+    // 9️⃣ Bottom ribbon
+    doc.setFillColor(3, 7, 30);
+    doc.rect(0, pageH - 10, pageW, 10, "F");
+
+    // Save each PDF to ZIP
+    const pdfBlob = doc.output("blob");
+    zip.file(`${row.Product || `giftcard_${index + 1}`}.pdf`, pdfBlob);
+  }
+
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  saveAs(zipBlob, "Gift_Cards_WithBrandName.zip");
+}
+</script>
+
+
+
+
+
+
+
+
+<style>
+      .container {
+        text-align: center;
+        margin-top: 50px;
+        background: #fff;
+        margin-bottom: 50px;
+        padding: 30px;
+        border-radius: 12px;
+        width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .input-container {
+        margin: 20px 0;
+    }
+    button {
+        background: #ff6b6b;
+        color: #fff;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    button:hover {
+        background: #e55353;
+    }
+</style>

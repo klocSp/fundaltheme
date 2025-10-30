@@ -1,0 +1,538 @@
+
+{% assign ai_gen_id = section.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-collection-filter-{{ ai_gen_id }} {
+    margin-bottom: 40px;
+    padding: 20px 0;
+  }
+
+  .ai-collection-filter__wrapper-{{ ai_gen_id }} {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-collection-filter__title-{{ ai_gen_id }} {
+    font-size: {{ section.settings.title_size }}px;
+    color: {{ section.settings.title_color }};
+    margin-bottom: 20px;
+    text-align: {{ section.settings.title_alignment }};
+  }
+
+  .ai-collection-filter__tags-{{ ai_gen_id }} {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: {{ section.settings.tags_alignment }};
+  }
+
+  .ai-collection-filter__tag-{{ ai_gen_id }} {
+    padding: 10px 20px;
+    background-color: {{ section.settings.tag_bg_color }};
+    color: {{ section.settings.tag_text_color }};
+    border: 1px solid {{ section.settings.tag_border_color }};
+    border-radius: {{ section.settings.tag_border_radius }}px;
+    text-decoration: none;
+    font-size: {{ section.settings.tag_font_size }}px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-section;
+  }
+
+  .ai-collection-filter__tag-{{ ai_gen_id }}:hover {
+    background-color: {{ section.settings.tag_hover_bg_color }};
+    color: {{ section.settings.tag_hover_text_color }};
+    border-color: {{ section.settings.tag_hover_border_color }};
+  }
+
+  .ai-collection-filter__tag-{{ ai_gen_id }}.active {
+    background-color: {{ section.settings.tag_active_bg_color }};
+    color: {{ section.settings.tag_active_text_color }};
+    border-color: {{ section.settings.tag_active_border_color }};
+  }
+
+  .ai-collection-filter__products-{{ ai_gen_id }} {
+    margin-top: 30px;
+  }
+
+  .ai-collection-filter__products-grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .ai-collection-filter__product-card-{{ ai_gen_id }} {
+    border: 1px solid {{ section.settings.card_border_color }};
+    border-radius: {{ section.settings.card_border_radius }}px;
+    overflow: hidden;
+    background-color: {{ section.settings.card_bg_color }};
+    transition: transform 0.3s ease;
+  }
+
+  .ai-collection-filter__product-card-{{ ai_gen_id }}:hover {
+    transform: translateY(-2px);
+  }
+
+  .ai-collection-filter__product-image-{{ ai_gen_id }} {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+  }
+
+  .ai-collection-filter__product-image-{{ ai_gen_id }} img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ai-collection-filter__product-image-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 200px;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-collection-filter__product-image-placeholder-{{ ai_gen_id }} svg {
+    width: 80px;
+    height: 80px;
+    opacity: 0.5;
+  }
+
+  .ai-collection-filter__product-info-{{ ai_gen_id }} {
+    padding: 15px;
+  }
+
+  .ai-collection-filter__product-title-{{ ai_gen_id }} {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: {{ section.settings.card_text_color }};
+  }
+
+  .ai-collection-filter__product-price-{{ ai_gen_id }} {
+    font-size: 14px;
+    color: {{ section.settings.card_price_color }};
+    font-weight: 500;
+  }
+
+  .ai-collection-filter__no-products-{{ ai_gen_id }} {
+    text-align: center;
+    padding: 40px 20px;
+    color: {{ section.settings.title_color }};
+    font-size: 18px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-collection-filter__tags-{{ ai_gen_id }} {
+      justify-content: center;
+    }
+
+    .ai-collection-filter__products-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+  }
+{% endstyle %}
+
+<collection-filter-{{ ai_gen_id }}
+  class="ai-collection-filter-{{ ai_gen_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="ai-collection-filter__wrapper-{{ ai_gen_id }}">
+    {% if section.settings.title != blank %}
+      <h2 class="ai-collection-filter__title-{{ ai_gen_id }}">{{ section.settings.title }}</h2>
+    {% endif %}
+
+    <div class="ai-collection-filter__tags-{{ ai_gen_id }}">
+      <button
+        class="ai-collection-filter__tag-{{ ai_gen_id }} active"
+        data-collection="all"
+      >
+        {{ section.settings.all_label }}
+      </button>
+
+      {% for i in (1..6) %}
+        {% assign collection_key = 'collection_' | append: i %}
+        {% assign collection = section.settings[collection_key] %}
+        
+        {% if collection != blank %}
+          <button
+            class="ai-collection-filter__tag-{{ ai_gen_id }}"
+            data-collection="{{ collection.handle }}"
+          >
+            {{ collection.title }}
+          </button>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="ai-collection-filter__products-{{ ai_gen_id }}">
+      <div class="ai-collection-filter__products-grid-{{ ai_gen_id }}" id="products-grid-{{ ai_gen_id }}">
+        {% assign all_products = '' | split: ',' %}
+        
+        {% for i in (1..6) %}
+          {% assign collection_key = 'collection_' | append: i %}
+          {% assign collection = section.settings[collection_key] %}
+          
+          {% if collection != blank %}
+            {% for product in collection.products limit: section.settings.products_per_collection %}
+              {% unless all_products contains product.id %}
+                {% assign all_products = all_products | append: product.id | append: ',' | split: ',' %}<div class="ai-collection-filter__product-card-{{ ai_gen_id }}" data-collections="{{ product.collections | map: 'handle' | join: ',' }}">
+                  <div class="ai-collection-filter__product-image-{{ ai_gen_id }}">
+                    {% if product.featured_image %}
+                      <img
+                        src="{{ product.featured_image | image_url: width: 400 }}"
+                        alt="{{ product.featured_image.alt | escape }}"
+                        loading="lazy"
+                        width="400"
+                        height="400"
+                      >
+                    {% else %}
+                      <div class="ai-collection-filter__product-image-placeholder-{{ ai_gen_id }}">
+                        {{ 'product-1' | placeholder_svg_tag }}
+                      </div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="ai-collection-filter__product-info-{{ ai_gen_id }}">
+                    <h3 class="ai-collection-filter__product-title-{{ ai_gen_id }}">
+                      <a href="{{ product.url }}">{{ product.title }}</a>
+                    </h3>
+                    <div class="ai-collection-filter__product-price-{{ ai_gen_id }}">
+                      {{ product.price | money }}
+                    </div>
+                  </div>
+                </div>
+              {% endunless %}
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </div>
+      
+      <div class="ai-collection-filter__no-products-{{ ai_gen_id }}" id="no-products-{{ ai_gen_id }}" style="display: none;">
+        {{ section.settings.no_products_message }}
+      </div>
+    </div>
+  </div>
+</collection-filter-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class CollectionFilter{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.tags = this.querySelectorAll('.ai-collection-filter__tag-{{ ai_gen_id }}');
+        this.productCards = this.querySelectorAll('.ai-collection-filter__product-card-{{ ai_gen_id }}');
+        this.productsGrid = this.querySelector('#products-grid-{{ ai_gen_id }}');
+        this.noProductsMessage = this.querySelector('#no-products-{{ ai_gen_id }}');
+      }
+
+      connectedCallback() {
+        this.setupEventListeners();
+      }
+
+      setupEventListeners() {
+        this.tags.forEach(tag => {
+          tag.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.filterProducts(tag.dataset.collection);
+            this.updateActiveTag(tag);
+          });
+        });
+      }
+
+      updateActiveTag(activeTag) {
+        this.tags.forEach(tag => tag.classList.remove('active'));
+        activeTag.classList.add('active');
+      }
+
+      filterProducts(selectedCollection) {
+        let visibleCount = 0;
+
+        this.productCards.forEach(card => {
+          const productCollections = card.dataset.collections.split(',');
+          
+          if (selectedCollection === 'all' || productCollections.includes(selectedCollection)) {
+            card.style.display = 'section';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        if (visibleCount === 0) {
+          this.productsGrid.style.display = 'none';
+          this.noProductsMessage.style.display = 'section';
+        } else {
+          this.productsGrid.style.display = 'grid';
+          this.noProductsMessage.style.display = 'none';
+        }
+      }
+    }
+
+    customElements.define('collection-filter-{{ ai_gen_id }}', CollectionFilter{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Collection Filter",
+  "tag": "section",
+  "class": "collection-filter",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section title",
+      "default": "Shop by Collection"
+    },
+    {
+      "type": "text",
+      "id": "all_label",
+      "label": "All products label",
+      "default": "All Products"
+    },
+    {
+      "type": "text",
+      "id": "no_products_message",
+      "label": "No products message",
+      "default": "No products found in this collection."
+    },
+    {
+      "type": "range",
+      "id": "products_per_collection",
+      "min": 4,
+      "max": 20,
+      "step": 2,
+      "label": "Products per collection",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Collections"
+    },
+    {
+      "type": "collection",
+      "id": "collection_1",
+      "label": "Collection 1"
+    },
+    {
+      "type": "collection",
+      "id": "collection_2",
+      "label": "Collection 2"
+    },
+    {
+      "type": "collection",
+      "id": "collection_3",
+      "label": "Collection 3"
+    },
+    {
+      "type": "collection",
+      "id": "collection_4",
+      "label": "Collection 4"
+    },
+    {
+      "type": "collection",
+      "id": "collection_5",
+      "label": "Collection 5"
+    },
+    {
+      "type": "collection",
+      "id": "collection_6",
+      "label": "Collection 6"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "title_alignment",
+      "label": "Title alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "tags_alignment",
+      "label": "Tags alignment",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Title size",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "tag_font_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Tag font size",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "tag_bg_color",
+      "label": "Tag background",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "tag_text_color",
+      "label": "Tag text color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "tag_border_color",
+      "label": "Tag border color",
+      "default": "#e6e6e6"
+    },
+    {
+      "type": "color",
+      "id": "tag_hover_bg_color",
+      "label": "Tag hover background",
+      "default": "#e6e6e6"
+    },
+    {
+      "type": "color",
+      "id": "tag_hover_text_color",
+      "label": "Tag hover text color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "tag_hover_border_color",
+      "label": "Tag hover border color",
+      "default": "#cccccc"
+    },
+    {
+      "type": "color",
+      "id": "tag_active_bg_color",
+      "label": "Active tag background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "tag_active_text_color",
+      "label": "Active tag text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "tag_active_border_color",
+      "label": "Active tag border color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_color",
+      "label": "Product card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "card_border_color",
+      "label": "Product card border",
+      "default": "#e6e6e6"
+    },
+    {
+      "type": "color",
+      "id": "card_text_color",
+      "label": "Product card text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "card_price_color",
+      "label": "Product card price",
+      "default": "#666666"
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "range",
+      "id": "tag_border_radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Tag border radius",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "card_border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Product card border radius",
+      "default": 8
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collection Filter"
+    }
+  ]
+}
+{% endschema %}
